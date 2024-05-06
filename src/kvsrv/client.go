@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"math/big"
 
+	"github.com/google/uuid"
+
 	"6.5840/labrpc"
 )
 
@@ -43,12 +45,10 @@ func (ck *Clerk) Get(key string) string {
 	args := GetArgs{Key: key}
 	reply := GetReply{}
 
-	ok := ck.server.Call("KVServer.Get", &args, &reply)
-	if ok {
-		return reply.Value
+	for !ck.server.Call("KVServer.Get", &args, &reply) {
+		// keep trying
 	}
-
-	return ""
+	return reply.Value
 }
 
 // shared by Put and Append.
@@ -61,15 +61,32 @@ func (ck *Clerk) Get(key string) string {
 // arguments. and reply must be passed as a pointer.
 func (ck *Clerk) PutAppend(key string, value string, op string) string {
 	// You will have to modify this function.
-	args := PutAppendArgs{Key: key, Value: value}
+	id := uuid.New()
+	args := &PutAppendArgs{
+		Key:       key,
+		Value:     value,
+		RequestID: id.ID(),
+		Mode:      Mode_Modify,
+	}
 	reply := PutAppendReply{}
 
-	ok := ck.server.Call("KVServer."+op, &args, &reply)
-	if ok{
-		return reply.Value
+	for !ck.server.Call("KVServer."+op, &args, &reply) {
+		// keep trying
+	}
+	ret := reply.Value
+
+	req := &PutAppendArgs{
+		RequestID: id.ID(),
+		Mode:      Mode_Report,
 	}
 
-	return ""
+	rsp := &PutAppendReply{}
+	for !ck.server.Call("KVServer."+op, req, rsp) {
+		// keep trying
+	}
+
+	return ret
+
 }
 
 func (ck *Clerk) Put(key string, value string) {
