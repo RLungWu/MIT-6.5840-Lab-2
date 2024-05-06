@@ -1,5 +1,12 @@
 package kvsrv
 
+type Mode int64
+
+const (
+	Mode_Modify Mode = 1
+	Mode_Report Mode = 2
+)
+
 // Put or Append
 type PutAppendArgs struct {
 	Key   string
@@ -7,6 +14,9 @@ type PutAppendArgs struct {
 	// You'll have to add definitions here.
 	// Field names must start with capital letters,
 	// otherwise RPC will break.
+
+	RequestID uint32 // unique request id
+	Mode      Mode
 }
 
 type PutAppendReply struct {
