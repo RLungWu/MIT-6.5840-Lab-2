@@ -62,7 +62,7 @@ func (ck *Clerk) Get(key string) string {
 func (ck *Clerk) PutAppend(key string, value string, op string) string {
 	// You will have to modify this function.
 	id := uuid.New()
-	args := &PutAppendArgs{
+	args := PutAppendArgs{
 		Key:       key,
 		Value:     value,
 		RequestID: id.ID(),
